@@ -362,19 +362,9 @@ struct ContentView: View {
                               .padding(.leading, 4)
                               .padding(.trailing, 8)
                           }
-                          // Old sneak peek music
-                          else if coordinator.sneakPeekState(for: vm.screenUUID).type == .music {
-                              if vm.notchState == .closed && !vm.hideOnClosed && Defaults[.sneakPeekStyles] == .standard {
-                                  HStack(alignment: .center) {
-                                      Image(systemName: "music.note")
-                                      GeometryReader { geo in
-                                          MarqueeText(musicManager.songTitle + " - " + musicManager.artistName,  color: Defaults[.playerColorTinting] ? Color(nsColor: musicManager.avgColor).ensureMinimumBrightness(factor: 0.6) : .gray, delayDuration: 1.0, frameWidth: geo.size.width)
-                                      }
-                                  }
-                                  .foregroundStyle(.gray)
-                                  .padding(.bottom, 10)
-                              }
-                          }
+                          // Music title/artist while the notch is closed is rendered
+                          // persistently by closedMusicMetadataView inside MusicLiveActivity,
+                          // so no separate sneak-peek title is drawn here to avoid duplication.
                       }
                   }
               }
@@ -533,12 +523,14 @@ struct ContentView: View {
                 )
                 .lineLimit(1)
 
-                Text(musicManager.artistName)
-                    .font(.system(size: artistSize, weight: .medium, design: .rounded))
-                    .foregroundStyle(artistColor)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(width: availableWidth, alignment: .leading)
+                if !musicManager.artistName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text(musicManager.artistName)
+                        .font(.system(size: artistSize, weight: .medium, design: .rounded))
+                        .foregroundStyle(artistColor)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(width: availableWidth, alignment: .leading)
+                }
             }
             .frame(width: availableWidth, height: height, alignment: .center)
             .padding(.horizontal, horizontalPadding)
@@ -548,7 +540,6 @@ struct ContentView: View {
 
     private var hasClosedMusicMetadata: Bool {
         !musicManager.songTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !musicManager.artistName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     @ViewBuilder
